@@ -35,6 +35,8 @@ import numpy as np
 
 from six.moves import urllib
 
+from coordconv import CoordConv2d
+
 ######################################################################
 # Depicting spatial transformer networks
 # --------------------------------------
@@ -62,14 +64,17 @@ class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
+        #self.coordconv1 = CoordConv2d(1, 10, kernel_size=5, with_r=True)
         self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
+        #self.coordconv2 = CoordConv2d(10, 20, kernel_size=5, with_r=True)
         self.conv2_drop = nn.Dropout2d()
         self.fc1 = nn.Linear(320, 50)
         self.fc2 = nn.Linear(50, 10)
 
         # Spatial transformer localization-network
         self.localization = nn.Sequential(
-            nn.Conv2d(1, 8, kernel_size=7),
+            #nn.Conv2d(1, 8, kernel_size=7),
+            CoordConv2d(1, 8, kernel_size=7, with_r=True),
             nn.MaxPool2d(2, stride=2),
             nn.ReLU(True),
             nn.Conv2d(8, 10, kernel_size=5),
@@ -106,7 +111,9 @@ class Net(nn.Module):
 
         # Perform the usual forward pass
         x = F.relu(F.max_pool2d(self.conv1(x), 2))
+        #x = F.relu(F.max_pool2d(self.coordconv1(x), 2))
         x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
+        #x = F.relu(F.max_pool2d(self.conv2_drop(self.coordconv2(x)), 2))
         x = x.view(-1, 320)
         x = F.relu(self.fc1(x))
         x = F.dropout(x, training=self.training)
