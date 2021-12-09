@@ -33,9 +33,16 @@ from torchvision import datasets, transforms
 import matplotlib.pyplot as plt
 import numpy as np
 
-from six.moves import urllib
+from six.moves import urllib # to download dataset
 
-from coordconv import CoordConv2d
+from coordconv import CoordConv2d # CoordConv2d layer
+
+from tensorboardX import SummaryWriter # to visualize training data
+
+from sklearn.metrics import confusion_matrix, f1_score # to calculate results metrics
+import pandas as pd
+import seaborn as sn
+import matplotlib.pyplot as plt
 
 ######################################################################
 # Depicting spatial transformer networks
@@ -64,9 +71,7 @@ class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
-        #self.coordconv1 = CoordConv2d(1, 10, kernel_size=5, with_r=True)
         self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
-        #self.coordconv2 = CoordConv2d(10, 20, kernel_size=5, with_r=True)
         self.conv2_drop = nn.Dropout2d()
         self.fc1 = nn.Linear(320, 50)
         self.fc2 = nn.Linear(50, 10)
@@ -77,7 +82,8 @@ class Net(nn.Module):
             CoordConv2d(1, 8, kernel_size=7, with_r=True),
             nn.MaxPool2d(2, stride=2),
             nn.ReLU(True),
-            nn.Conv2d(8, 10, kernel_size=5),
+            #nn.Conv2d(8, 10, kernel_size=5),
+            CoordConv2d(8, 10, kernel_size=5, with_r=True),
             nn.MaxPool2d(2, stride=2),
             nn.ReLU(True)
         )
@@ -111,14 +117,13 @@ class Net(nn.Module):
 
         # Perform the usual forward pass
         x = F.relu(F.max_pool2d(self.conv1(x), 2))
-        #x = F.relu(F.max_pool2d(self.coordconv1(x), 2))
         x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
-        #x = F.relu(F.max_pool2d(self.conv2_drop(self.coordconv2(x)), 2))
         x = x.view(-1, 320)
         x = F.relu(self.fc1(x))
         x = F.dropout(x, training=self.training)
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
+        #return x
 
 ######################################################################
 # Training the model
@@ -136,6 +141,7 @@ def train(model, device, train_loader, optimizer, epoch):
         optimizer.zero_grad()
         output = model(data)
         loss = F.nll_loss(output, target)
+        #loss = F.cross_entropy(output, target)
         loss.backward()
         optimizer.step()
         if batch_idx % 500 == 0:
@@ -143,29 +149,40 @@ def train(model, device, train_loader, optimizer, epoch):
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()))
 
+    return loss.item()
+
 #
 # A simple test procedure to measure the STN performances on MNIST.
 #
 
-def test(model, device, test_loader):
+def test(model, device, test_loader, epoch, num_epochs):
     with torch.no_grad():
         model.eval()
         test_loss = 0
         correct = 0
+        acc_targets = []
+        acc_preds = []
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
 
             # sum up batch loss
             test_loss += F.nll_loss(output, target, size_average=False).item()
+            #test_loss += F.cross_entropy(output, target, size_average=False).item()
             # get the index of the max log-probability
             pred = output.max(1, keepdim=True)[1]
             correct += pred.eq(target.view_as(pred)).sum().item()
+            # Accumulate targets and predictions for final evaluation
+            acc_targets = acc_targets + target.tolist()
+            #preds_np = pred.cpu().detach().numpy()[:,0].tolist()
+            acc_preds = acc_preds + pred.cpu().detach().numpy()[:,0].tolist()
 
         test_loss /= len(test_loader.dataset)
         print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'
               .format(test_loss, correct, len(test_loader.dataset),
                       100. * correct / len(test_loader.dataset)))
+
+        return test_loss, (100. * correct / len(test_loader.dataset)), acc_preds, acc_targets
 
 ######################################################################
 # Visualizing the STN results
@@ -250,10 +267,43 @@ def main():
     # SGD optimizer
     optimizer = optim.SGD(model.parameters(), lr=0.01)
 
+    # Instantiate tensorboardX writer
+    writer = SummaryWriter()
+
+    num_epochs = 2
+    best_acc = 0
+    best_acc_preds = []
+    best_acc_targets = []
     # Train loop
-    for epoch in range(1, 20 + 1):
-        train(model, device, train_loader, optimizer, epoch)
-        test(model, device, test_loader)
+    for epoch in range(1, num_epochs + 1):
+        train_loss = train(model, device, train_loader, optimizer, epoch)
+        test_loss, acc, acc_preds, acc_targets = test(model, device, test_loader, epoch, num_epochs)
+
+        # Update loss and accuracy info to tensorboard report for live visualization
+        writer.add_scalars('Loss Info', {'train_loss': train_loss,
+                                         'test_loss': test_loss}, epoch)
+        writer.add_scalar('Test Accuracy', acc, epoch)
+
+        # Store pred and correct if the test accuracy is the best until now
+        if acc >= best_acc:
+            best_acc = acc
+            best_acc_preds = acc_preds
+            best_acc_targets = acc_targets
+
+    # Compute F1-score
+    f1score = f1_score(best_acc_targets, best_acc_preds, average='macro')
+    print("\nF1-Score = {:.4f}\n".format(f1score))
+
+    # Compute confusion matrix and save it
+    cfm = confusion_matrix(y_true=best_acc_targets, y_pred=best_acc_preds)
+    classes = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    df_cfm = pd.DataFrame(cfm, index=classes, columns=classes)
+    fig = plt.figure(figsize=(10, 7))
+    fig.suptitle('Confusion matrix\n(Acc = {:.2f}% | F1-Score = {:.4f}'.format(best_acc, f1score), fontsize=16)
+    cfm_plot = sn.heatmap(df_cfm, annot=True)
+    cfm_plot.figure.savefig("cfm.png")
+
+    writer.close()
 
     # Visualize the STN transformation on some input batch
     visualize_stn(model, device, test_loader)
