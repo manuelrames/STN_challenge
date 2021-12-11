@@ -1,7 +1,7 @@
 # STN_challenge
 
 ## Table of contents
-* [Introduction](@introduction)
+* [Introduction](#introduction)
 * [Setup](#setup)
 * [Training](#training)
 * [Research/Methods](#research/methods)
@@ -13,7 +13,7 @@
 
 The baseline code for the project is taken from the following PyTorch tutorial: https://pytorch.org/tutorials/intermediate/spatial_transformer_tutorial.html.
 In it, one can learn how to augment your network using a visual attention mechanism called **spatial transformer networks** (STNs for short).
-For more information please read [1].
+For more information please read [[1]](#1).
 
 <p align="center">
  <img src="/images/schematic_STN.jpg">
@@ -24,10 +24,10 @@ how to perform spatial transformations on the input image in order to enhance th
 For example, it can crop a region of interest, scale and correct the orientation of an image. It can be a useful mechanism
 because CNNs are not invariant to rotation and scale and more general affine transformations.
 
-Taking into account the ideas from [2], the addition of a **CoordConv** layer into the STN mechanism is also investigated.
+Taking into account the ideas from [[2]](#2)., the addition of a **CoordConv** layer into the STN mechanism is also investigated.
 CoordConv allows networks to learn either complete translation invariance or varying degrees of translation dependence,
 as required by the task. CoordConv solves the coordinate transform problem with perfect generalization and 150 faster 
-with 10-100 times fewer parameters than convolution. See [2] for more complete information on the topic.
+with 10-100 times fewer parameters than convolution. See [[2]](#2). for more complete information on the topic.
 
 <p align="center">
  <img src="./images/coordconvlayer.jpg">
@@ -123,5 +123,33 @@ using CoordConv layer (#1 run of CoordConv -> **99.18% Accuracy** & **0.9917 F1-
 
 ## Future Work
 
+After a bibliographic search on latest advancements on STNs, one article [[3]](#3). came up in which they proof that since STNs perform a
+purely spatial transformation, they do not, in the general case, have the ability to align the feature maps of a transformed image
+with those of its original. Therefore, they are unable to support invariance when transforming CNN feature maps. As a result,
+they decide to investigate alternative STN architectures that make use of complex features.
 
+They conclude that, while deeper localization networks are difficult to train, localization networks that share parameters
+with the classification network remain stable as they grow deeper, which allows for higher classification accuracy on 
+difficult datasets.
 
+<p align="center">
+ <img src="./images/alternative_STNs.jpg">
+</p>
+
+The image above depicts four different ways of building STNs. *LOC* denotes the localization network, which predicts the
+parameters of a transformation. *ST* denotes the spatial transformer, which takes these parameters and transforms an image
+or feature map according to them. In **STN-C0**, the approach used in the experiments described in previous sections, 
+the ST transforms the input image. In **STN-CX**, the ST transforms a feature map. **STN-DLX** transforms the input image, 
+but makes use of deeper features by including copies of the first X convolutional layers in the localization network. 
+Lastly, **STN-SLX** is similar to STN-DLX but shares parameters between the classification and localization networks. 
+STN-SLX solves the theoretical problem, uses no more parameters than STN-CX, and like STN-CX, the localization network 
+makes use of layers trained directly on the classification loss.
+
+So, to sum up, a reasonable alternative would be to modify our current STN-C0 architecture and try STN-SLX architecture 
+on classifying the MNIST dataset, given more time to do so. 
+
+## References
+
+* <a id="1">[1]</a> Spatial Transformer Networks (2016) -> https://arxiv.org/abs/1506.02025
+* <a id="2">[2]</a> An intriguing failing of convolutional neural networks and the CoordConv solution (2018) -> https://arxiv.org/abs/1807.03247 
+* <a id="3">[3]</a> Understanding when spatial transformer networks do not support invariance, and what to do about it (2021) -> https://arxiv.org/abs/2004.11678 
