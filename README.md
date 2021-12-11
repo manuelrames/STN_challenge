@@ -15,7 +15,9 @@ The baseline code for the project is taken from the following PyTorch tutorial: 
 In it, one can learn how to augment your network using a visual attention mechanism called **spatial transformer networks** (STNs for short).
 For more information please read [1].
 
-![Alt Text](./images/schematic_STN.jpg)
+<p align="center">
+ <img src="/images/schematic_STN.jpg">
+</p>
 
 STNs are a generalization of differentiable attention to any spatial transformation. They allow a neural network to learn
 how to perform spatial transformations on the input image in order to enhance the geometric invariance of the model.
@@ -108,7 +110,8 @@ Run | *#1* | *#2* | *#3* | *#4* | *#5* | *#1* | *#2* | *#3* | *#4* | *#5* |
 **Mean** (*STD*) |  |  | **99.05** (*0.03*) |  |  |  |  | **99.06** (*0.09*) |  |  |
 
 It cannot be concluded by the trials performed that the substitution of Conv for CoordConv layer inside the localization 
-network in the STN enhances its functionality. It rather seems to be equivalent.
+network in the STN enhances its functionality. It rather seems to be equivalent. However, best performing model was achieved
+using CoordConv layer (#1 run of CoordConv -> **99.18% Accuracy** & **0.9917 F1-Score**)
 
 ## Future Work
 
