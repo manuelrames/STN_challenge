@@ -29,7 +29,9 @@ CoordConv allows networks to learn either complete translation invariance or var
 as required by the task. CoordConv solves the coordinate transform problem with perfect generalization and 150 faster 
 with 10-100 times fewer parameters than convolution. See [2] for more complete information on the topic.
 
-![Alt Text](./images/coordconvlayer.jpg)
+<p align="center">
+ <img src="./images/coordconvlayer.jpg">
+</p>
 
 	
 ## Setup
@@ -70,8 +72,10 @@ $ tensorboard --logdir ./runs
 
 And then open in your browser http://localhost:6006/
 
-![Alt Text](./images/train_test_lossInfo.jpg)
-![Alt Text](./images/test_acc.jpg)
+<p align="center">
+ <img src="./images/train_test_lossInfo.jpg">
+ <img src="./images/test_acc.jpg">
+</p>
 
 An **optimizer scheduler** was also included during training so as to lower the initial training rate by half. This 
 yielded more stable training curves towards the second part of the process. Default number of **epochs** was fixed to **30**. 
@@ -82,7 +86,9 @@ Regarding the <code>grid_sampling</code> method inside the STN, the <code>paddin
 <code>"border"</code> to prevent the network from filling the zones outside of the grid with zeros. That was creating 
 borders inside the sampled image that could affect classification accuracy.
 
-![Alt Text](./images/stn_visualization_paddingMode_border.png)
+<p align="center">
+ <img src="./images/stn_visualization_paddingMode_border.png">
+</p>
 
 ## Results
 
@@ -96,7 +102,9 @@ TensorboardX also helped to decide about other minor modifications in the traini
 sections. For each run, a **confusion matrix** was calculated along with **test-set accuracy** percentage and **F1-Score**.
 An example of this is the following image of the best model achieved:
 
-![Alt Text](./results/cfm_coordconv2d_run1.png)
+<p align="center">
+ <img src="./results/cfm_coordconv2d_run1.png">
+</p>
 
 ### Conv vs CoordConv
 
