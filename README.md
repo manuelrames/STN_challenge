@@ -61,7 +61,7 @@ optional arguments:
 
 ## Research/Methods
 
-A major code refactor has been done to the initial baseline for code clarity. **TensorboardX** has also been used in order 
+A major code refactor has been done to the initial baseline code for clarity. **TensorboardX** has also been used in order 
 to better visualize the training data such as train and test losses and model accuracy on the test set. This helped to 
 check for model under/overfitting and generalization simply on your browser in realtime. To do that, once you have started
 a training process, open a cmd/bash window and type (where <code>./runs</code> is the logging directory of the training events):
@@ -123,7 +123,7 @@ using CoordConv layer (#1 run of CoordConv -> **99.18% Accuracy** & **0.9917 F1-
 
 ## Future Work
 
-After a bibliographic search on latest advancements on STNs, one article [[3]](#3). came up in which they proof that since STNs perform a
+After a bibliographic search on latest advancements on STNs, one article [[3]](#3) came up in which they proof that since STNs perform a
 purely spatial transformation, they do not, in the general case, have the ability to align the feature maps of a transformed image
 with those of its original. Therefore, they are unable to support invariance when transforming CNN feature maps. As a result,
 they decide to investigate alternative STN architectures that make use of complex features.
