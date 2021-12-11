@@ -4,7 +4,7 @@
 * [Introduction](#introduction)
 * [Setup](#setup)
 * [Training](#training)
-* [Research/Methods](#research/methods)
+* [Research/Methods](#researchmethods)
 * [Results](#results)
 * [Future Work](#future-work)
 * [References](#references)
