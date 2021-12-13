@@ -77,6 +77,7 @@ def main(in_argv):
     train_loader = torch.utils.data.DataLoader(
         datasets.MNIST(root='.', train=True, download=True,
                        transform=transforms.Compose([
+                           transforms.RandomAffine(15, translate=(0.1, 0.1), scale=(0.85, 1.15), shear=0.15),
                            transforms.ToTensor(),
                            transforms.Normalize((0.1307,), (0.3081,))
                        ])), batch_size=64, shuffle=True, num_workers=4)

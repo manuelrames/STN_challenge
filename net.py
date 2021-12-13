@@ -31,9 +31,28 @@ class Net(nn.Module):
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
         self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
+        self.batchnorm1 = nn.BatchNorm2d(10)
+        self.batchnorm2 = nn.BatchNorm2d(20)
         self.conv2_drop = nn.Dropout2d()
         self.fc1 = nn.Linear(320, 50)
         self.fc2 = nn.Linear(50, 10)
+
+        """self.hidden1 = nn.Conv2d(1, 32, kernel_size=3)
+        self.batchNorm2D1 = nn.BatchNorm2d(32)
+        self.hidden2 = nn.Conv2d(32, 32, kernel_size=3)
+        self.hidden3 = nn.Conv2d(32, 32, kernel_size=5, stride=2, padding=(2,2))
+        self.dropout2D = nn.Dropout2d(p=0.4)
+        self.hidden4 = nn.Conv2d(32, 64, kernel_size=3)
+        self.hidden4 = nn.Conv2d(32, 64, kernel_size=3)
+        self.batchNorm2D2 = nn.BatchNorm2d(64)
+        self.hidden5 = nn.Conv2d(64, 64, kernel_size=3)
+        self.hidden6 = nn.Conv2d(64, 64, kernel_size=5, stride=2, padding=(2,2))
+        self.hidden7 = nn.Conv2d(64, 128, kernel_size=4)
+        self.batchNorm2D3 = nn.BatchNorm2d(128)
+        self.droput1D = nn.Dropout(p=0.4)
+        self.fc1 = nn.Linear(128, 10)"""
+
+
 
         print("Using {} layer...".format(conv_layer))
         # Spatial transformer localization-network
@@ -75,7 +94,6 @@ class Net(nn.Module):
         theta = theta.view(-1, 2, 3)
 
         grid = F.affine_grid(theta, x.size())
-        #x = F.grid_sample(x, grid)
         x = F.grid_sample(x, grid, padding_mode="border")
 
         return x
@@ -85,10 +103,24 @@ class Net(nn.Module):
         x = self.stn(x)
 
         # Perform the usual forward pass
-        x = F.relu(F.max_pool2d(self.conv1(x), 2))
-        x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
+        x = self.batchnorm1(F.relu(F.max_pool2d(self.conv1(x), 2)))
+        x = self.batchnorm2(F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2)))
         x = x.view(-1, 320)
         x = F.relu(self.fc1(x))
         x = F.dropout(x, training=self.training)
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
+
+        # Modified forward pass (See: https://www.kaggle.com/cdeotte/25-million-images-0-99757-mnist/notebook)
+        """x = self.batchNorm2D1(F.relu(self.hidden1(x)))
+        x = self.batchNorm2D1(F.relu(self.hidden2(x)))
+        x = self.dropout2D(self.batchNorm2D1(F.relu(self.hidden3(x))))
+
+        x = self.batchNorm2D2(F.relu(self.hidden4(x)))
+        x = self.batchNorm2D2(F.relu(self.hidden5(x)))
+        x = self.dropout2D(self.batchNorm2D2(F.relu(self.hidden6(x))))
+
+        x = self.batchNorm2D3(F.relu(self.hidden7(x)))
+        x = self.droput1D(x.view(-1, 128))
+        x = self.fc1(x)
+        return F.log_softmax(x, dim=1)"""
