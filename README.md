@@ -121,6 +121,20 @@ It cannot be concluded by the trials performed that the substitution of Conv for
 network in the STN enhances its functionality. It rather seems to be equivalent. However, best performing model was achieved
 using CoordConv layer (#1 run of CoordConv -> **99.18% Accuracy** & **0.9917 F1-Score**)
 
+### Best Model MVP
+
+Most accurate model with **(Acc = 99.40 % & F1-Score = 0.9940)** was achieved after including a data augmentation policy during training (<code>transforms.RandomAffine(15, translate=(0.1, 0.1), scale=(0.85, 1.15), shear=0.15)</code>). 
+It comprehends:
+
+* **Random rotations** between *-15 and +15 degrees*
+* **Random horizontal/vertical translations** between *-img_width * 0.1 and img_width * 0.1 pixels*
+* **Random scale** sampled from the range *0.9 <= scale <= 1.1*
+* **Random shear** parallel to the x axis in the range *(-0.15, +0.15) degrees*
+
+Also, a **BatchNorm2D** layer was added in the classification netwok after the ReLu activations. Finally, the **number of epochs** 
+was increased to **45** (remind that the StepLR decreased the learning-rate by half every 15 epochs). This specific run can 
+be visualized using TensorboardX, namely <code>./runs/Dec13_01-50-09_SIGMAPC61</code>.
+
 ## Future Work
 
 After a bibliographic search on latest advancements on STNs, one article [[3]](#3) came up in which they proof that since STNs perform a
